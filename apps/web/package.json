@@ -22,10 +22,10 @@
     "@tailwindcss/postcss": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "eslint": "9.39.5",
+    "eslint": "10.11.0",
     "eslint-config-next": "latest",
     "tailwindcss": "latest",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vitest": "latest"
   }
 }
