@@ -1,0 +1,32 @@
+{
+  "name": "@simon/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js",
+    "test": "vitest run src --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "latest",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/rate-limit": "^11.2.0",
+    "@simon/game-engine": "workspace:*",
+    "@simon/shared-types": "workspace:*",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "fastify": "latest",
+    "redis": "^6.3.0",
+    "socket.io": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "tsx": "latest",
+    "typescript": "6.0.3",
+    "vitest": "latest"
+  }
+}

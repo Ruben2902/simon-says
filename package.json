@@ -1,0 +1,31 @@
+{
+  "name": "simon-says",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @simon/web --filter @simon/server dev",
+    "dev:mobile": "node scripts/dev-mobile.mjs",
+    "dev:web": "pnpm --filter @simon/web dev",
+    "dev:server": "pnpm --filter @simon/server dev",
+    "build": "pnpm -r build",
+    "format": "prettier --write . --ignore-path .gitignore",
+    "format:check": "prettier --check . --ignore-path .gitignore",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:e2e": "playwright test",
+    "typecheck": "pnpm -r typecheck",
+    "quality:static": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "quality": "pnpm quality:static && pnpm test:e2e",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "latest",
+    "eslint": "9.39.5",
+    "prettier": "latest",
+    "typescript": "6.0.3",
+    "vitest": "latest"
+  }
+}
