@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Interfaz bilingüe en inglés y español, con inglés predeterminado y preferencia persistente.
+
 ## 1.0.0 - 2026-10-01
 
 - Juego de memoria autoritativo para dos jugadores en salas privadas.

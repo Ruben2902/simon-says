@@ -11,17 +11,33 @@ async function expectNoAccessibilityViolations(page: Page) {
   expect(results.violations).toEqual([]);
 }
 
-test("la entrada es accesible y conecta con el servidor", async ({ page }) => {
+test("English is the default language and the entry is accessible", async ({
+  page,
+}) => {
   await page.goto("/");
 
-  await expect(page.getByText("Servidor conectado")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Crear/ })).toBeEnabled();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByText("Server connected")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create" })).toBeEnabled();
   await expectNoAccessibilityViolations(page);
 });
 
-test("dos jugadores entran, comienzan y recuperan la partida", async ({
-  browser,
-}) => {
+test("the selected language persists after reload", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByText("Server connected")).toBeVisible();
+  await page.getByRole("button", { name: "Spanish" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(
+    page.getByRole("heading", { name: "Entra al duelo" }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Servidor conectado")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+});
+
+test("two players join, start and recover the match", async ({ browser }) => {
   const hostContext = await browser.newContext();
   const guestContext = await browser.newContext();
   const host = await hostContext.newPage();
@@ -36,33 +52,33 @@ test("dos jugadores entran, comienzan y recuperan la partida", async ({
 
   try {
     await host.goto("/");
-    await expect(host.getByText("Servidor conectado")).toBeVisible();
-    await host.getByLabel("Tu nombre").fill("Ada");
-    await host.getByRole("button", { name: /Crear/ }).click();
+    await expect(host.getByText("Server connected")).toBeVisible();
+    await host.getByLabel("Your name").fill("Ada");
+    await host.getByRole("button", { name: "Create" }).click();
 
-    const roomTitle = host.getByRole("heading", { name: /^Sala / });
+    const roomTitle = host.getByRole("heading", { name: /^Room / });
     await expect(roomTitle).toBeVisible();
-    const roomCode = (await roomTitle.textContent())?.replace("Sala ", "");
+    const roomCode = (await roomTitle.textContent())?.replace("Room ", "");
     expect(roomCode).toMatch(/^[A-Z2-9]{5}$/);
 
     await guest.goto("/");
-    await expect(guest.getByText("Servidor conectado")).toBeVisible();
-    await guest.getByLabel("Tu nombre").fill("Linus");
-    await guest.getByLabel("Código de sala").fill(roomCode!);
-    await guest.getByRole("button", { name: /Entrar/ }).click();
+    await expect(guest.getByText("Server connected")).toBeVisible();
+    await guest.getByLabel("Your name").fill("Linus");
+    await guest.getByLabel("Room code").fill(roomCode!);
+    await guest.getByRole("button", { name: "Enter" }).click();
 
     await expect(host.getByRole("heading", { name: /Linus/ })).toBeVisible();
     await expect(guest.getByRole("heading", { name: /Ada/ })).toBeVisible();
     await expectNoAccessibilityViolations(host);
 
-    await host.getByRole("button", { name: "Estoy listo" }).click();
-    await guest.getByRole("button", { name: "Estoy listo" }).click();
+    await host.getByRole("button", { name: "I'm ready" }).click();
+    await guest.getByRole("button", { name: "I'm ready" }).click();
 
     await expect(
-      host.getByRole("heading", { name: "Duelo de memoria" }),
+      host.getByRole("heading", { name: "Memory duel" }),
     ).toBeVisible();
     await expect(
-      guest.getByRole("heading", { name: "Duelo de memoria" }),
+      guest.getByRole("heading", { name: "Memory duel" }),
     ).toBeVisible();
 
     const sessionBeforeReload = await host.evaluate(
@@ -73,7 +89,7 @@ test("dos jugadores entran, comienzan y recuperan la partida", async ({
 
     await host.reload();
     await expect(
-      host.getByRole("heading", { name: "Duelo de memoria" }),
+      host.getByRole("heading", { name: "Memory duel" }),
     ).toBeVisible();
     await expect(host.getByText("Ada", { exact: true })).toBeVisible();
     await expect(host.getByText("Linus", { exact: true })).toBeVisible();
@@ -84,7 +100,7 @@ test("dos jugadores entran, comienzan y recuperan la partida", async ({
       ),
     ).toBe(sessionBeforeReload);
 
-    await expect(host.getByRole("button", { name: /^Verde/ })).toBeEnabled({
+    await expect(host.getByRole("button", { name: /^Green/ })).toBeEnabled({
       timeout: 15_000,
     });
     expect(consoleErrors).toEqual([]);

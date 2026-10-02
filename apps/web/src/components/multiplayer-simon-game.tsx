@@ -1,6 +1,7 @@
 "use client";
 
 import { useMultiplayerSession } from "@/hooks/use-multiplayer-session";
+import { useI18n } from "@/i18n/i18n-provider";
 
 import { GameResult } from "./game-result";
 import { MatchConsole } from "./match-console";
@@ -8,6 +9,7 @@ import { RoomEntry } from "./room-entry";
 import { RoomLobby } from "./room-lobby";
 
 export function MultiplayerSimonGame() {
+  const { t } = useI18n();
   const game = useMultiplayerSession();
 
   let content;
@@ -67,8 +69,8 @@ export function MultiplayerSimonGame() {
         <div className="connection-toast" role="status">
           <span aria-hidden="true" />
           {game.connected
-            ? "Restaurando tu lugar y sincronizando la ronda…"
-            : "Conexión interrumpida. Reservamos tu lugar durante 15 segundos…"}
+            ? t("connection.restoring")
+            : t("connection.interrupted")}
         </div>
       ) : null}
       {content}

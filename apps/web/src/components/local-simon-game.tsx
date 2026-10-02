@@ -11,11 +11,14 @@ import {
 import { SIMON_COLORS, type SimonColor } from "@simon/shared-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const COLOR_LABELS: Record<SimonColor, string> = {
-  green: "Verde",
-  red: "Rojo",
-  yellow: "Amarillo",
-  blue: "Azul",
+import { useI18n } from "@/i18n/i18n-provider";
+import type { TranslationKey } from "@/i18n/translations";
+
+const COLOR_LABEL_KEYS: Record<SimonColor, TranslationKey> = {
+  green: "board.green",
+  red: "board.red",
+  yellow: "board.yellow",
+  blue: "board.blue",
 };
 
 const FREQUENCIES: Record<SimonColor, number> = {
@@ -25,12 +28,12 @@ const FREQUENCIES: Record<SimonColor, number> = {
   blue: 196,
 };
 
-const STATUS_COPY: Record<GameStatus, string> = {
-  idle: "Pulsa comenzar cuando estés listo",
-  "showing-sequence": "Observa la secuencia",
-  "accepting-input": "Tu turno: repítela",
-  "round-success": "Secuencia correcta",
-  "game-over": "La memoria falló",
+const STATUS_KEYS: Record<GameStatus, TranslationKey> = {
+  idle: "local.idle",
+  "showing-sequence": "local.showingSequence",
+  "accepting-input": "local.acceptingInput",
+  "round-success": "local.roundSuccess",
+  "game-over": "local.gameOver",
 };
 
 function useSimonAudio() {
@@ -61,6 +64,7 @@ function useSimonAudio() {
 }
 
 export function LocalSimonGame() {
+  const { t } = useI18n();
   const [game, setGame] = useState(createInitialGame);
   const [activeColor, setActiveColor] = useState<SimonColor | null>(null);
   const [bestScore, setBestScore] = useState(0);
@@ -140,11 +144,14 @@ export function LocalSimonGame() {
       <div className="console-screw screw-two" aria-hidden="true" />
       <div className="console-header">
         <div>
-          <p className="console-kicker">Unidad SM-04</p>
-          <h2 id="game-title">Prueba de memoria</h2>
+          <p className="console-kicker">{t("local.kicker")}</p>
+          <h2 id="game-title">{t("local.title")}</h2>
         </div>
-        <div className="round-counter" aria-label={`Ronda ${game.round}`}>
-          <small>Ronda</small>
+        <div
+          className="round-counter"
+          aria-label={t("match.roundAria", { round: game.round })}
+        >
+          <small>{t("local.round")}</small>
           <strong>{String(game.round).padStart(2, "0")}</strong>
         </div>
       </div>
@@ -152,45 +159,53 @@ export function LocalSimonGame() {
       <div className="display-panel" aria-live="polite">
         <span className={`display-beacon status-${game.status}`} />
         <div>
-          <small>Estado</small>
-          <p>{STATUS_COPY[game.status]}</p>
+          <small>{t("local.status")}</small>
+          <p>{t(STATUS_KEYS[game.status])}</p>
         </div>
         <span className="input-progress">{inputProgress}</span>
       </div>
 
-      <div className="simon-board" aria-label="Tablero de cuatro colores">
-        {SIMON_COLORS.map((color, index) => (
-          <button
-            aria-label={`${COLOR_LABELS[color]}, posición ${index + 1}`}
-            aria-pressed={activeColor === color}
-            className={`simon-key simon-${color} ${activeColor === color ? "is-active" : ""}`}
-            disabled={game.status !== "accepting-input"}
-            key={color}
-            onClick={() => handleColor(color)}
-            type="button"
-          >
-            <span className="key-number">0{index + 1}</span>
-            <span className="key-label">{COLOR_LABELS[color]}</span>
-          </button>
-        ))}
+      <div className="simon-board" aria-label={t("board.aria")}>
+        {SIMON_COLORS.map((color, index) => {
+          const colorLabel = t(COLOR_LABEL_KEYS[color]);
+          return (
+            <button
+              aria-label={t("board.position", {
+                color: colorLabel,
+                position: index + 1,
+              })}
+              aria-pressed={activeColor === color}
+              className={`simon-key simon-${color} ${activeColor === color ? "is-active" : ""}`}
+              disabled={game.status !== "accepting-input"}
+              key={color}
+              onClick={() => handleColor(color)}
+              type="button"
+            >
+              <span className="key-number">0{index + 1}</span>
+              <span className="key-label">{colorLabel}</span>
+            </button>
+          );
+        })}
         <div className="board-core" aria-hidden="true">
           <span>SIMON</span>
           <i />
-          <small>MEMORY UNIT</small>
+          <small>{t("board.memoryUnit")}</small>
         </div>
       </div>
 
       <div className="console-footer">
         <div className="score-cell">
-          <small>Puntos</small>
+          <small>{t("local.points")}</small>
           <strong>{String(game.score).padStart(2, "0")}</strong>
         </div>
         <div className="score-cell">
-          <small>Récord</small>
+          <small>{t("local.best")}</small>
           <strong>{String(bestScore).padStart(2, "0")}</strong>
         </div>
         <button className="start-button" onClick={handleStart} type="button">
-          <span>{game.status === "idle" ? "Comenzar" : "Reiniciar"}</span>
+          <span>
+            {game.status === "idle" ? t("local.start") : t("local.restart")}
+          </span>
           <i aria-hidden="true">→</i>
         </button>
       </div>

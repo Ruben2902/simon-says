@@ -124,6 +124,63 @@ input:focus-visible {
   padding-bottom: 22px;
 }
 
+.masthead-tools {
+  align-items: center;
+  display: flex;
+  gap: clamp(14px, 2.5vw, 34px);
+}
+
+.language-control {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.language-label {
+  color: rgba(239, 234, 216, 0.48);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.language-switcher {
+  background: rgba(239, 234, 216, 0.06);
+  border: 1px solid rgba(239, 234, 216, 0.22);
+  border-radius: 999px;
+  display: flex;
+  padding: 3px;
+}
+
+.language-switcher button {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(239, 234, 216, 0.55);
+  cursor: pointer;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  min-height: 29px;
+  min-width: 35px;
+  padding: 5px 8px;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.language-switcher button:not(.is-active):hover {
+  color: var(--paper);
+}
+
+.language-switcher button.is-active {
+  background: var(--acid);
+  color: var(--ink);
+  transform: rotate(-2deg);
+}
+
 .brand {
   align-items: center;
   color: var(--paper);
@@ -1294,7 +1351,15 @@ input:focus-visible {
   }
 
   .phase-tag {
-    font-size: 0.58rem;
+    display: none;
+  }
+
+  .language-label {
+    display: none;
+  }
+
+  .masthead-tools {
+    gap: 8px;
   }
 
   .hero {

@@ -2,6 +2,9 @@
 
 import type { GameFinishedPayload } from "@simon/shared-types";
 
+import { useI18n } from "@/i18n/i18n-provider";
+import type { TranslationKey } from "@/i18n/translations";
+
 interface GameResultProps {
   currentPlayerId: string;
   result: GameFinishedPayload;
@@ -9,11 +12,11 @@ interface GameResultProps {
   onRematch: () => void;
 }
 
-const REASON_COPY: Record<GameFinishedPayload["reason"], string> = {
-  "opponent-failed": "Una señal incorrecta decidió el duelo.",
-  "furthest-progress": "Ganó quien recordó más pasos de la secuencia.",
-  draw: "Ambos llegaron exactamente al mismo punto.",
-  forfeit: "El rival abandonó la conexión.",
+const REASON_KEYS: Record<GameFinishedPayload["reason"], TranslationKey> = {
+  "opponent-failed": "result.opponentFailed",
+  "furthest-progress": "result.furthestProgress",
+  draw: "result.equalProgress",
+  forfeit: "result.forfeit",
 };
 
 export function GameResult({
@@ -22,13 +25,18 @@ export function GameResult({
   onLeave,
   onRematch,
 }: GameResultProps) {
+  const { t } = useI18n();
   const isDraw = result.winnerId === null;
   const didWin = result.winnerId === currentPlayerId;
-  const title = isDraw ? "Empate técnico" : didWin ? "Victoria" : "Derrota";
+  const title = isDraw
+    ? t("result.draw")
+    : didWin
+      ? t("result.win")
+      : t("result.loss");
 
   return (
     <section className="result-panel" aria-labelledby="result-title">
-      <p className="console-kicker">Transmisión finalizada</p>
+      <p className="console-kicker">{t("result.kicker")}</p>
       <span
         className={`result-stamp ${didWin ? "is-win" : ""}`}
         aria-hidden="true"
@@ -36,12 +44,16 @@ export function GameResult({
         {isDraw ? "=" : didWin ? "+" : "×"}
       </span>
       <h2 id="result-title">{title}</h2>
-      <p>{REASON_COPY[result.reason]}</p>
+      <p>{t(REASON_KEYS[result.reason])}</p>
 
       <div className="result-scores">
         {result.room.players.map((player) => (
           <article key={player.id}>
-            <span>{player.id === currentPlayerId ? "Tú" : "Rival"}</span>
+            <span>
+              {player.id === currentPlayerId
+                ? t("result.you")
+                : t("result.opponent")}
+            </span>
             <strong>{player.name}</strong>
             <b>{String(player.score).padStart(2, "0")}</b>
           </article>
@@ -50,10 +62,10 @@ export function GameResult({
 
       <div className="result-actions">
         <button className="ghost-button" onClick={onLeave} type="button">
-          Salir de la sala
+          {t("result.leave")}
         </button>
         <button className="ready-button" onClick={onRematch} type="button">
-          Jugar revancha <span aria-hidden="true">→</span>
+          {t("result.rematch")} <span aria-hidden="true">→</span>
         </button>
       </div>
     </section>

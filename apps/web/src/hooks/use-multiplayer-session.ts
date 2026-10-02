@@ -6,6 +6,7 @@ import type {
   GameSyncPayload,
   PlayerSnapshot,
   RoomAcknowledgement,
+  RoomErrorCode,
   RoomSnapshot,
   SimonColor,
 } from "@simon/shared-types";
@@ -18,6 +19,8 @@ import {
 } from "react";
 
 import { createGameSocket, type GameSocket } from "@/lib/game-socket";
+import { useI18n } from "@/i18n/i18n-provider";
+import type { TranslationKey } from "@/i18n/translations";
 import {
   clearPlayerSession,
   readPlayerSession,
@@ -33,6 +36,33 @@ const KEYBOARD_COLORS: Record<string, SimonColor> = {
   "4": "blue",
 };
 
+type InterfaceErrorCode = RoomErrorCode | "CONNECTION_FAILED" | "NAME_REQUIRED";
+
+const ERROR_KEYS: Record<InterfaceErrorCode, TranslationKey> = {
+  CONNECTION_FAILED: "error.connection",
+  NAME_REQUIRED: "error.nameRequired",
+  INVALID_PAYLOAD: "error.invalidPayload",
+  ALREADY_IN_ROOM: "error.alreadyInRoom",
+  ROOM_NOT_FOUND: "error.roomNotFound",
+  ROOM_FULL: "error.roomFull",
+  GAME_ALREADY_STARTED: "error.gameStarted",
+  INVALID_ROOM_STATE: "error.invalidRoomState",
+  PLAYER_NOT_FOUND: "error.playerNotFound",
+  INPUT_LOCKED: "error.inputLocked",
+  RECONNECT_EXPIRED: "error.reconnectExpired",
+  RATE_LIMITED: "error.rateLimited",
+  SERVICE_UNAVAILABLE: "error.serviceUnavailable",
+};
+
+const MESSAGE_KEYS: Record<RoomSnapshot["phase"], TranslationKey> = {
+  lobby: "message.lobby",
+  countdown: "message.countdown",
+  "showing-sequence": "message.showingSequence",
+  "accepting-input": "message.acceptingInput",
+  "round-result": "message.roundResult",
+  finished: "message.finished",
+};
+
 function updateRoomPlayers(
   room: RoomSnapshot | null,
   players: PlayerSnapshot[],
@@ -41,11 +71,12 @@ function updateRoomPlayers(
 }
 
 export function useMultiplayerSession() {
+  const { t } = useI18n();
   const socketRef = useRef<GameSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [restoring, setRestoring] = useState(true);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<InterfaceErrorCode | null>(null);
   const [playerId, setPlayerId] = useState("");
   const [room, setRoom] = useState<RoomSnapshot | null>(null);
   const [roundData, setRoundData] = useState<GameSequencePayload | null>(null);
@@ -53,7 +84,8 @@ export function useMultiplayerSession() {
   const [inputEnabled, setInputEnabled] = useState(false);
   const [inputDeadlineAt, setInputDeadlineAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const [message, setMessage] = useState("Preparando el enlace");
+  const [messageKey, setMessageKey] =
+    useState<TranslationKey>("message.preparing");
   const [countdownEndsAt, setCountdownEndsAt] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [result, setResult] = useState<GameFinishedPayload | null>(null);
@@ -78,15 +110,7 @@ export function useMultiplayerSession() {
     );
     setActiveColor(null);
 
-    const messages: Record<RoomSnapshot["phase"], string> = {
-      lobby: "Esperando confirmación de ambos jugadores",
-      countdown: "Prepárate. El duelo está por comenzar.",
-      "showing-sequence": "Memoriza cada luz y cada tono.",
-      "accepting-input": "Ahora: repite la secuencia completa.",
-      "round-result": "Ambos completaron la ronda. Añadiendo una señal…",
-      finished: "Partida finalizada.",
-    };
-    setMessage(messages[sync.room.phase]);
+    setMessageKey(MESSAGE_KEYS[sync.room.phase]);
   }, []);
 
   useEffect(() => {
@@ -95,7 +119,7 @@ export function useMultiplayerSession() {
 
     const handleConnect = () => {
       setConnected(true);
-      setError("");
+      setErrorCode(null);
       const session = readPlayerSession();
 
       if (!session) {
@@ -116,7 +140,7 @@ export function useMultiplayerSession() {
             setResult(null);
             setRoundData(null);
             setInputEnabled(false);
-            setError(acknowledgement.error.message);
+            setErrorCode(acknowledgement.error.code);
             return;
           }
 
@@ -143,7 +167,7 @@ export function useMultiplayerSession() {
     const handleConnectError = () => {
       setConnected(false);
       setRestoring(false);
-      setError("No podemos conectar con el servidor del juego.");
+      setErrorCode("CONNECTION_FAILED");
     };
     const handleRoomUpdated = (nextRoom: RoomSnapshot) => {
       setRoom(nextRoom);
@@ -152,7 +176,7 @@ export function useMultiplayerSession() {
         setRoundData(null);
         setInputDeadlineAt(null);
         setSecondsLeft(null);
-        setMessage("Esperando confirmación de ambos jugadores");
+        setMessageKey("message.lobby");
       }
     };
 
@@ -160,12 +184,12 @@ export function useMultiplayerSession() {
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
     socket.on("room:updated", handleRoomUpdated);
-    socket.on("room:error", (roomError) => setError(roomError.message));
+    socket.on("room:error", (roomError) => setErrorCode(roomError.code));
     socket.on("game:starting", ({ startsAt }) => {
       setCountdownEndsAt(startsAt);
       setInputDeadlineAt(null);
       setSecondsLeft(null);
-      setMessage("Prepárate. El duelo está por comenzar.");
+      setMessageKey("message.countdown");
       setInputEnabled(false);
       setResult(null);
     });
@@ -175,11 +199,11 @@ export function useMultiplayerSession() {
       setCountdown(null);
       setInputDeadlineAt(null);
       setSecondsLeft(null);
-      setMessage("Memoriza cada luz y cada tono.");
+      setMessageKey("message.showingSequence");
       setInputEnabled(false);
     });
     socket.on("game:input-enabled", ({ deadlineAt }) => {
-      setMessage("Ahora: repite la secuencia completa.");
+      setMessageKey("message.acceptingInput");
       setInputDeadlineAt(deadlineAt);
       setSecondsLeft(Math.max(0, Math.ceil((deadlineAt - Date.now()) / 1_000)));
       setInputEnabled(true);
@@ -192,7 +216,7 @@ export function useMultiplayerSession() {
       setInputEnabled(false);
       setInputDeadlineAt(null);
       setSecondsLeft(null);
-      setMessage("Ambos completaron la ronda. Añadiendo una señal…");
+      setMessageKey("message.roundResult");
     });
     socket.on("game:finished", (gameResult) => {
       setRoom(gameResult.room);
@@ -300,17 +324,17 @@ export function useMultiplayerSession() {
       const cleanName = name.trim();
 
       if (!socket || !cleanName) {
-        setError("Escribe tu nombre para continuar.");
+        setErrorCode("NAME_REQUIRED");
         return;
       }
 
       setPending(true);
-      setError("");
+      setErrorCode(null);
 
       const callback = (acknowledgement: RoomAcknowledgement) => {
         setPending(false);
         if (!acknowledgement.ok) {
-          setError(acknowledgement.error.message);
+          setErrorCode(acknowledgement.error.code);
           return;
         }
 
@@ -344,7 +368,7 @@ export function useMultiplayerSession() {
   const handleReady = (ready: boolean) => {
     socketRef.current?.emit("player:ready", { ready }, (acknowledgement) => {
       if (!acknowledgement.ok) {
-        setError(acknowledgement.error.message);
+        setErrorCode(acknowledgement.error.code);
       }
     });
   };
@@ -365,7 +389,7 @@ export function useMultiplayerSession() {
           !acknowledgement.ok &&
           acknowledgement.error.code !== "INPUT_LOCKED"
         ) {
-          setError(acknowledgement.error.message);
+          setErrorCode(acknowledgement.error.code);
         }
       });
     },
@@ -401,7 +425,7 @@ export function useMultiplayerSession() {
     setSecondsLeft(null);
     setCountdown(null);
     setCountdownEndsAt(null);
-    setError("");
+    setErrorCode(null);
   };
 
   const handleLeave = () => {
@@ -414,7 +438,7 @@ export function useMultiplayerSession() {
   const handleRematch = () => {
     socketRef.current?.emit("game:rematch", (acknowledgement) => {
       if (!acknowledgement.ok) {
-        setError(acknowledgement.error.message);
+        setErrorCode(acknowledgement.error.code);
       }
     });
   };
@@ -423,13 +447,13 @@ export function useMultiplayerSession() {
     activeColor,
     connected,
     countdown,
-    error,
+    error: errorCode ? t(ERROR_KEYS[errorCode]) : "",
     handleColor,
     handleLeave,
     handleReady,
     handleRematch,
     joinRoom,
-    message,
+    message: t(messageKey),
     muted,
     pending,
     playerId,

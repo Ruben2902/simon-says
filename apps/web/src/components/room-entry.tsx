@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 
+import { useI18n } from "@/i18n/i18n-provider";
+
 interface RoomEntryProps {
   connected: boolean;
   error: string;
@@ -17,6 +19,7 @@ export function RoomEntry({
   onCreate,
   onJoin,
 }: RoomEntryProps) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
 
@@ -33,15 +36,16 @@ export function RoomEntry({
   return (
     <section className="room-entry" aria-labelledby="room-entry-title">
       <div className="entry-heading">
-        <p className="console-kicker">Canal multijugador</p>
-        <h2 id="room-entry-title">Entra al duelo</h2>
+        <p className="console-kicker">{t("entry.kicker")}</p>
+        <h2 id="room-entry-title">{t("entry.title")}</h2>
         <span className={`connection-pill ${connected ? "is-online" : ""}`}>
-          <i /> {connected ? "Servidor conectado" : "Conectando…"}
+          <i />
+          {connected ? t("entry.serverConnected") : t("entry.connecting")}
         </span>
       </div>
 
       <label className="field-label" htmlFor="player-name">
-        Tu nombre
+        {t("entry.nameLabel")}
       </label>
       <input
         aria-describedby={error ? "room-form-error" : undefined}
@@ -51,7 +55,7 @@ export function RoomEntry({
         id="player-name"
         maxLength={18}
         onChange={(event) => setName(event.target.value)}
-        placeholder="Ej. Alex"
+        placeholder={t("entry.namePlaceholder")}
         value={name}
       />
 
@@ -59,22 +63,22 @@ export function RoomEntry({
         <form className="entry-card create-card" onSubmit={handleCreate}>
           <span className="entry-number">01</span>
           <div>
-            <h3>Crear sala</h3>
-            <p>Recibe un código para compartir.</p>
+            <h3>{t("entry.createTitle")}</h3>
+            <p>{t("entry.createBody")}</p>
           </div>
           <button disabled={!connected || pending} type="submit">
-            Crear <span aria-hidden="true">→</span>
+            {t("entry.createButton")} <span aria-hidden="true">→</span>
           </button>
         </form>
 
         <form className="entry-card join-card" onSubmit={handleJoin}>
           <span className="entry-number">02</span>
           <div>
-            <h3>Unirse</h3>
-            <p>Ingresa el código de cinco caracteres.</p>
+            <h3>{t("entry.joinTitle")}</h3>
+            <p>{t("entry.joinBody")}</p>
           </div>
           <label className="sr-only" htmlFor="room-code">
-            Código de sala
+            {t("entry.codeLabel")}
           </label>
           <input
             aria-describedby={error ? "room-form-error" : undefined}
@@ -92,7 +96,7 @@ export function RoomEntry({
             value={code}
           />
           <button disabled={!connected || pending} type="submit">
-            Entrar <span aria-hidden="true">→</span>
+            {t("entry.joinButton")} <span aria-hidden="true">→</span>
           </button>
         </form>
       </div>

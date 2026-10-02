@@ -15,15 +15,15 @@ const bodyFont = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Simon Says — Laboratorio de memoria",
-  description: "Entrena tu memoria con una secuencia de luz y sonido.",
+  title: "Simon Says — Memory Lab",
+  description: "Train your memory with a sequence of light and sound.",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
         {children}
       </body>

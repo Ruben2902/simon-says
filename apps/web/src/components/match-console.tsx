@@ -6,15 +6,18 @@ import type {
   SimonColor,
 } from "@simon/shared-types";
 
+import { useI18n } from "@/i18n/i18n-provider";
+import type { TranslationKey } from "@/i18n/translations";
+
 import { SimonBoard } from "./simon-board";
 
-const PHASE_LABELS: Record<GamePhase, string> = {
-  lobby: "Esperando jugadores",
-  countdown: "El duelo comienza",
-  "showing-sequence": "Observa la secuencia",
-  "accepting-input": "Tu turno: repítela",
-  "round-result": "Ronda superada",
-  finished: "Partida finalizada",
+const PHASE_LABEL_KEYS: Record<GamePhase, TranslationKey> = {
+  lobby: "phase.lobby",
+  countdown: "phase.countdown",
+  "showing-sequence": "phase.showingSequence",
+  "accepting-input": "phase.acceptingInput",
+  "round-result": "phase.roundResult",
+  finished: "phase.finished",
 };
 
 interface MatchConsoleProps {
@@ -48,6 +51,7 @@ export function MatchConsole({
   secondsLeft,
   sequenceLength,
 }: MatchConsoleProps) {
+  const { t } = useI18n();
   const currentPlayer = players.find((player) => player.id === currentPlayerId);
 
   return (
@@ -56,21 +60,24 @@ export function MatchConsole({
       <div className="console-screw screw-two" aria-hidden="true" />
       <div className="console-header">
         <div>
-          <p className="console-kicker">Enlace sincronizado</p>
-          <h2 id="match-title">Duelo de memoria</h2>
+          <p className="console-kicker">{t("match.kicker")}</p>
+          <h2 id="match-title">{t("match.title")}</h2>
         </div>
         <div className="console-controls">
           <button
-            aria-label={muted ? "Activar sonidos" : "Silenciar sonidos"}
+            aria-label={muted ? t("match.enableSound") : t("match.muteSound")}
             aria-pressed={muted}
             className="audio-toggle"
             onClick={onToggleMute}
             type="button"
           >
-            {muted ? "Sonido off" : "Sonido on"}
+            {muted ? t("match.soundOff") : t("match.soundOn")}
           </button>
-          <div className="round-counter" aria-label={`Ronda ${round}`}>
-            <small>Ronda</small>
+          <div
+            className="round-counter"
+            aria-label={t("match.roundAria", { round })}
+          >
+            <small>{t("match.round")}</small>
             <strong>{String(round).padStart(2, "0")}</strong>
           </div>
         </div>
@@ -82,12 +89,16 @@ export function MatchConsole({
             className={`duel-player ${player.id === currentPlayerId ? "is-current" : ""}`}
             key={player.id}
           >
-            <span>{player.id === currentPlayerId ? "Tú" : "Rival"}</span>
+            <span>
+              {player.id === currentPlayerId
+                ? t("match.you")
+                : t("match.opponent")}
+            </span>
             <strong>{player.name}</strong>
             <small>
-              {player.connected ? "En línea" : "Reconectando"} ·{" "}
-              {String(player.score).padStart(2, "0")} pts · {player.progress}/
-              {sequenceLength}
+              {player.connected ? t("match.online") : t("match.reconnecting")} ·{" "}
+              {String(player.score).padStart(2, "0")} {t("match.points")} ·{" "}
+              {player.progress}/{sequenceLength}
             </small>
           </article>
         ))}
@@ -96,13 +107,10 @@ export function MatchConsole({
       <div className="display-panel" aria-live="polite">
         <span className={`display-beacon status-${phase}`} />
         <div>
-          <small>{PHASE_LABELS[phase]}</small>
+          <small>{t(PHASE_LABEL_KEYS[phase])}</small>
           <p>{message}</p>
         </div>
-        <span
-          className="input-progress"
-          aria-label="Progreso y tiempo restante"
-        >
+        <span className="input-progress" aria-label={t("match.progressAria")}>
           {secondsLeft !== null ? `${secondsLeft}s · ` : ""}
           {currentPlayer?.progress ?? 0}/{sequenceLength}
         </span>
@@ -116,7 +124,7 @@ export function MatchConsole({
         />
         {countdown !== null ? (
           <div className="countdown-overlay" aria-live="assertive">
-            <small>Sincronizando</small>
+            <small>{t("match.syncing")}</small>
             <strong>{countdown}</strong>
           </div>
         ) : null}
@@ -124,12 +132,12 @@ export function MatchConsole({
 
       <div className="match-legend">
         <span>
-          <i className="legend-light observe" /> Observar
+          <i className="legend-light observe" /> {t("match.observe")}
         </span>
         <span>
-          <i className="legend-light respond" /> Responder
+          <i className="legend-light respond" /> {t("match.respond")}
         </span>
-        <span>Teclas 1–4 · servidor autoritativo</span>
+        <span>{t("match.controls")}</span>
       </div>
     </section>
   );

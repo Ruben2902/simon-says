@@ -3,6 +3,8 @@
 import type { RoomSnapshot } from "@simon/shared-types";
 import { useState } from "react";
 
+import { useI18n } from "@/i18n/i18n-provider";
+
 interface RoomLobbyProps {
   playerId: string;
   room: RoomSnapshot;
@@ -16,6 +18,7 @@ export function RoomLobby({
   onLeave,
   onReady,
 }: RoomLobbyProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const currentPlayer = room.players.find((player) => player.id === playerId);
 
@@ -29,18 +32,18 @@ export function RoomLobby({
     <section className="lobby-panel" aria-labelledby="lobby-title">
       <div className="lobby-topline">
         <div>
-          <p className="console-kicker">Frecuencia privada</p>
-          <h2 id="lobby-title">Sala {room.code}</h2>
+          <p className="console-kicker">{t("lobby.kicker")}</p>
+          <h2 id="lobby-title">{t("lobby.title", { code: room.code })}</h2>
         </div>
         <button className="ghost-button" onClick={onLeave} type="button">
-          Salir
+          {t("lobby.leave")}
         </button>
       </div>
 
       <button className="room-code-display" onClick={copyCode} type="button">
-        <small>Código de enlace</small>
+        <small>{t("lobby.linkCode")}</small>
         <strong>{room.code}</strong>
-        <span>{copied ? "Copiado" : "Copiar código"}</span>
+        <span>{copied ? t("lobby.copied") : t("lobby.copyCode")}</span>
       </button>
 
       <div className="player-slots">
@@ -60,14 +63,16 @@ export function RoomLobby({
                   <div>
                     <h3>
                       {player.name}{" "}
-                      {player.id === playerId ? <em>TÚ</em> : null}
+                      {player.id === playerId ? (
+                        <em>{t("lobby.you")}</em>
+                      ) : null}
                     </h3>
                     <p>
                       {!player.connected
-                        ? "Reconectando…"
+                        ? t("lobby.reconnecting")
                         : player.ready
-                          ? "Listo para jugar"
-                          : "Preparándose"}
+                          ? t("lobby.ready")
+                          : t("lobby.preparing")}
                     </p>
                   </div>
                   <i
@@ -83,8 +88,8 @@ export function RoomLobby({
                 <div className="empty-player">
                   <span className="waiting-radar" />
                   <div>
-                    <h3>Esperando rival</h3>
-                    <p>Comparte el código de la sala</p>
+                    <h3>{t("lobby.waitingOpponent")}</h3>
+                    <p>{t("lobby.shareCode")}</p>
                   </div>
                 </div>
               )}
@@ -96,8 +101,8 @@ export function RoomLobby({
       <div className="lobby-footer">
         <p>
           {room.players.length < 2
-            ? "El duelo se habilitará cuando llegue el segundo jugador."
-            : "Ambos jugadores deben confirmar para comenzar."}
+            ? t("lobby.waitingSecond")
+            : t("lobby.bothConfirm")}
         </p>
         <button
           className={`ready-button ${currentPlayer?.ready ? "is-ready" : ""}`}
@@ -108,7 +113,7 @@ export function RoomLobby({
           onClick={() => onReady(!currentPlayer?.ready)}
           type="button"
         >
-          {currentPlayer?.ready ? "Cancelar listo" : "Estoy listo"}
+          {currentPlayer?.ready ? t("lobby.cancelReady") : t("lobby.imReady")}
           <span aria-hidden="true">●</span>
         </button>
       </div>
